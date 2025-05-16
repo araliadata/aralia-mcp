@@ -45,7 +45,6 @@ def format_aralia_data_for_mcp(processed_data_wrapper: list) -> str:
         if not isinstance(dataset_data_json_str, str):
             dataset_data_json_str = json.dumps({"error": "Data was not a JSON string.", "original_type": str(type(dataset_data_json_str))})
 
-
         xml_parts.append(f"  <document index=\"{i+1}\" source_id=\"{dataset_id}\" name=\"{dataset_name}\">")
         xml_parts.append(f"    <description><![CDATA[{description}]]></description>")
         # The content is a JSON string representing a pandas DataFrame snippet (first 400 rows)

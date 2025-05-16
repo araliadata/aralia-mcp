@@ -1,17 +1,20 @@
 # Save this as aralia_agent_logic.py
 import os
 import sys
-import pandas as pd # For mock DataFrame
+import pandas as pd 
+import json 
 
 # Attempt to import actual Aralia components
 try:
     from aralia_openrag import aralia_tools, node
     from aralia_openrag.aralia_tools import AraliaTools
     ARALIA_LIBRARY_AVAILABLE = True
+    print("INFO: Successfully imported aralia_openrag library.", file=sys.stderr)
 except ImportError:
     ARALIA_LIBRARY_AVAILABLE = False
     print("WARNING: aralia_openrag library not found. Using mock objects for Aralia components.", file=sys.stderr)
-    # [Keep the same mock objects as in the previous response if aralia_openrag is not found]
+    
+    # --- Mock Objects (if aralia_openrag is not available) ---
     class AraliaTools:
         def __init__(self, username, password, url):
             print(f"Mock AraliaTools initialized for {url} (username: {username})", file=sys.stderr)
@@ -58,7 +61,7 @@ except ImportError:
                 print(f"  Added mock 'json_data' to chart_spec: {dataset_name}", file=sys.stderr)
             return 
 
-    class MockNodeModule: # Renamed to avoid conflict if real 'node' is imported
+    class MockNodeModule:
         def aralia_search_agent(self, state):
             print("Mock node.aralia_search_agent called", file=sys.stderr)
             at = state.get("at")
@@ -96,19 +99,21 @@ except ImportError:
             state.get("at").explore_tool(chart_specs_list) 
             return {"search_results": [chart_specs_list]}
     
-    # If aralia_openrag.node couldn't be imported, assign the mock
     if not ARALIA_LIBRARY_AVAILABLE:
-        node = MockNodeModule()
+        node = MockNodeModule() # Assign the mock if the real 'node' couldn't be imported
 
-
-# --- Global Instances (Initialized by the server at startup) ---
-# These will be set by the server application after loading environment variables.
+# --- Global Instances ---
 default_llm_instance = None
 aralia_tools_instance_global = None
+INITIALIZATION_ATTEMPTED = False
+INITIALIZATION_SUCCESSFUL = False
 
 def initialize_global_instances():
-    """Initializes global LLM and AraliaTools instances."""
-    global default_llm_instance, aralia_tools_instance_global
+    global default_llm_instance, aralia_tools_instance_global, INITIALIZATION_ATTEMPTED, INITIALIZATION_SUCCESSFUL
+
+    if INITIALIZATION_ATTEMPTED: # Avoid re-initializing if already attempted
+        return INITIALIZATION_SUCCESSFUL
+    INITIALIZATION_ATTEMPTED = True
 
     ARALIA_USERNAME = os.getenv("ARALIA_USERNAME")
     ARALIA_PASSWORD = os.getenv("ARALIA_PASSWORD")
@@ -116,8 +121,8 @@ def initialize_global_instances():
     PLANET_URL = os.getenv("ARALIA_PLANET_URL", "https://tw-air.araliadata.io/api")
 
     if not (ARALIA_USERNAME and ARALIA_PASSWORD and GEMINI_API_KEY):
-        print("ERROR: Aralia/Gemini credentials not fully configured for agent logic.", file=sys.stderr)
-        # The server will handle returning an error if these are needed and missing.
+        print("ERROR: Aralia/Gemini credentials not fully configured in environment variables.", file=sys.stderr)
+        INITIALIZATION_SUCCESSFUL = False
         return False
 
     try:
@@ -127,32 +132,24 @@ def initialize_global_instances():
         )
         if ARALIA_LIBRARY_AVAILABLE:
             aralia_tools_instance_global = AraliaTools(
-                username=ARALIA_USERNAME,
-                password=ARALIA_PASSWORD,
-                url=PLANET_URL
+                username=ARALIA_USERNAME, password=ARALIA_PASSWORD, url=PLANET_URL
             )
         else: # Use mock if library not found
-             aralia_tools_instance_global = MockAraliaTools( # Assuming MockAraliaTools is defined if ARALIA_LIBRARY_AVAILABLE is False
-                username=ARALIA_USERNAME,
-                password=ARALIA_PASSWORD,
-                url=PLANET_URL
+             aralia_tools_instance_global = AraliaTools( # Using the defined mock AraliaTools
+                username=ARALIA_USERNAME, password=ARALIA_PASSWORD, url=PLANET_URL
             )
+        print("INFO: Global instances initialized successfully.", file=sys.stderr)
+        INITIALIZATION_SUCCESSFUL = True
         return True
     except Exception as e:
         print(f"ERROR: Failed to initialize global instances for agent logic: {e}", file=sys.stderr)
+        INITIALIZATION_SUCCESSFUL = False
         return False
 
-
 def fetch_aralia_evidence_for_mcp(user_question: str, verbose: bool = False) -> list:
-    """
-    Runs the Aralia data retrieval and processing pipeline.
-    Returns the list of chart specifications, each enriched with 'json_data'.
-    This list is what analytics_execution_agent's 'search_results' will contain (nested once).
-    """
-    if not default_llm_instance or not aralia_tools_instance_global:
-        print("ERROR: Agent logic dependencies not initialized. Call initialize_global_instances() first.", file=sys.stderr)
+    if not INITIALIZATION_SUCCESSFUL:
+        print("ERROR: Agent logic dependencies not initialized. Call initialize_global_instances() first or check env vars.", file=sys.stderr)
         return [{"error": "Agent logic dependencies not initialized."}]
-
 
     current_state = {
         "question": user_question, "ai": default_llm_instance, "at": aralia_tools_instance_global,
@@ -165,32 +162,26 @@ def fetch_aralia_evidence_for_mcp(user_question: str, verbose: bool = False) -> 
         if verbose: print("AgentLogic: Running Aralia Search Agent...", file=sys.stderr)
         search_output = node.aralia_search_agent(current_state)
         current_state.update(search_output)
-        if not current_state.get("response") or not current_state.get("response"): # list of dataset dicts
+        if not current_state.get("response") or not isinstance(current_state.get("response"), list) or not current_state.get("response"):
             return [{"error": "No datasets found by search agent"}]
 
         if verbose: print("AgentLogic: Running Analytics Planning Agent...", file=sys.stderr)
         planning_output = node.analytics_planning_agent(current_state)
-        current_state.update(planning_output) # response is now list of chart_specs
+        current_state.update(planning_output)
         planned_charts_specs = current_state.get("response")
         if not planned_charts_specs or not isinstance(planned_charts_specs, list) or \
-           not (len(planned_charts_specs) > 0 and planned_charts_specs[0].get("id")):
+           not (len(planned_charts_specs) > 0 and isinstance(planned_charts_specs[0], dict) and planned_charts_specs[0].get("id")):
             return [{"error": "No analysis plan generated"}]
 
         if verbose: print("AgentLogic: Running Filter Decision Agent...", file=sys.stderr)
         filter_output = node.filter_decision_agent(current_state)
-        current_state.update(filter_output) # response is modified list of chart_specs
+        current_state.update(filter_output)
         
         if verbose: print("AgentLogic: Running Analytics Execution Agent...", file=sys.stderr)
-        # This agent calls aralia_tools_instance.explore_tool which modifies
-        # current_state['response'] (the list of chart_specs) in-place by adding 'json_data'.
-        # Then it returns {"search_results": [current_state['response']]}
         execution_output = node.analytics_execution_agent(current_state)
         current_state.update(execution_output)
-
-        # The data to be formatted is current_state['search_results']
-        # which is [[spec1_with_json_data, spec2_with_json_data, ...]]
-        processed_data_wrapper = current_state.get("search_results", [])
         
+        processed_data_wrapper = current_state.get("search_results", [])
         if not processed_data_wrapper or not isinstance(processed_data_wrapper, list) or \
            len(processed_data_wrapper) == 0 or not isinstance(processed_data_wrapper[0], list) or \
            not (len(processed_data_wrapper[0]) > 0 and isinstance(processed_data_wrapper[0][0], dict) and \
@@ -198,10 +189,8 @@ def fetch_aralia_evidence_for_mcp(user_question: str, verbose: bool = False) -> 
             if verbose: print(f"AgentLogic: No json_data found. Structure: {processed_data_wrapper}", file=sys.stderr)
             return [{"error": "No data snippets retrieved or unexpected format from analytics_execution_agent"}]
         
-        # Return the wrapper list as this is what format_aralia_data_for_mcp now expects
         return processed_data_wrapper
 
     except Exception as e:
         if verbose: print(f"AgentLogic: Error during Aralia pipeline: {e}", file=sys.stderr)
         return [{"error": f"Error in Aralia pipeline: {str(e)}"}]
-
