@@ -1,4 +1,5 @@
-import json, time
+import json
+import time
 from config import setting, exec_time
 from . import prompts
 from .state import BasicState
@@ -24,7 +25,9 @@ def aralia_search_agent(state: BasicState):
 
             filtered_datasets = [datasets[item] for item in response["dataset_key"]]
             break
-        except:
+        except Exception as e:
+            if setting["debug"]:
+                print(f"發生錯誤: {e}")
             continue
     else:
         raise RuntimeError("無法找到可能回答問題的資料集，程式終止")
@@ -179,7 +182,9 @@ def filter_decision_agent(state: BasicState):
                         filter.pop("format")
                 chart["filter"] = [chart["filter"]]
             break
-        except:
+        except Exception as e:
+            if setting["debug"]:
+                print(f"發生錯誤: {e}")
             continue
     else:
         raise RuntimeError("AI模型無法選擇準確的filter value")
