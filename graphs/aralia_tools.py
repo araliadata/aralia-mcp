@@ -12,20 +12,21 @@ class AraliaTools:
         self.token = self.login()
 
     def login(self):
-        return requests.post(
-            "https://xwckbycddv4zlzeslemvhoh6sa0xoxcc.lambda-url.ap-southeast-1.on.aws/",
-            json={
-                "username": self.username,
-                "password": self.password
-            }
-        ).json().get("data")['accessToken']
+        return (
+            requests.post(
+                "https://xwckbycddv4zlzeslemvhoh6sa0xoxcc.lambda-url.ap-southeast-1.on.aws/",
+                json={"username": self.username, "password": self.password},
+            )
+            .json()
+            .get("data")["accessToken"]
+        )
 
     def get(self, url, query={}):
         """
         Sends a GET request with an Authorization Bearer token and retrieves the response.
 
         Args:
-            token (str): 
+            token (str):
             url (str): Endpoint to send the GET request to, appended to the base URL.
             query (dict, optional): Query parameters to include in the GET request. Defaults to an empty dictionary.
 
@@ -54,7 +55,7 @@ class AraliaTools:
         Sends a POST request with an Authorization Bearer token and retrieves the response.
 
         Args:
-            token (str): 
+            token (str):
             url (str): Endpoint to send the GET request to, appended to the base URL.
             query (dict, optional): Query parameters to include in the GET request. Defaults to an empty dictionary.
 
@@ -80,33 +81,43 @@ class AraliaTools:
 
     def search_tool(self, question: str):
         response = self.get(
-            self.official_url + "/galaxy/dataset", {
-                "keyword": question,
-                "pageSize": 50
-            }
+            self.official_url + "/galaxy/dataset", {"keyword": question, "pageSize": 50}
         )
 
         for item in response:
             item.pop("sourceType")
-            item['sourceURL'], _, _ = item['sourceURL'].partition('/admin')
+            item["sourceURL"], _, _ = item["sourceURL"].partition("/admin")
 
-        return {item['id']: item for item in response}
+        return {item["id"]: item for item in response}
 
     def column_metadata_tool(self, datasets: List[any]):
         for dataset in datasets:
             if column_metadata := self.get(
                 f"{dataset['sourceURL']}/api/dataset/{dataset['id']}"
             ):
-                cols_exclude = ["id", "name", "datasetID", "visible",
-                                "ordinalPosition", "sortingSettingID"]
-                virtual_exclude = ["id", "name", "datasetID", "visible",
-                                   "setting", "sourceType", "language", "country"]
+                cols_exclude = [
+                    "id",
+                    "name",
+                    "datasetID",
+                    "visible",
+                    "ordinalPosition",
+                    "sortingSettingID",
+                ]
+                virtual_exclude = [
+                    "id",
+                    "name",
+                    "datasetID",
+                    "visible",
+                    "setting",
+                    "sourceType",
+                    "language",
+                    "country",
+                ]
 
                 dataset["columns"] = {
-                    column['id']: {
+                    column["id"]: {
                         **{"columnID": column["id"]},
-                        **{k: v for k, v in column.items()
-                            if k not in cols_exclude}
+                        **{k: v for k, v in column.items() if k not in cols_exclude},
                     }
                     for column in column_metadata["columns"]
                     if column["type"] != "undefined" and column["visible"]
@@ -115,34 +126,41 @@ class AraliaTools:
                 if virtual_vars := self.get(
                     f"{dataset['sourceURL']}/api/dataset/{dataset['id']}/virtual-variables"
                 ):
-                    dataset["columns"].update({
-                        var['id']: {
-                            "columnID": var["id"],
-                            **{k: v for k, v in var.items()
-                               if k not in virtual_exclude}
+                    dataset["columns"].update(
+                        {
+                            var["id"]: {
+                                "columnID": var["id"],
+                                **{
+                                    k: v
+                                    for k, v in var.items()
+                                    if k not in virtual_exclude
+                                },
+                            }
+                            for var in virtual_vars
                         }
-                        for var in virtual_vars
-                    })
+                    )
 
-        return {dataset['id']: dataset for dataset in datasets if "columns" in dataset}
+        return {dataset["id"]: dataset for dataset in datasets if "columns" in dataset}
 
     def filter_option_tool(self, datasets: List):
         for dataset in datasets:
-            for filter_column in dataset['filter']:
+            for filter_column in dataset["filter"]:
                 response = self.post(
-                    dataset['sourceURL'] + "/api/exploration/" +
-                    dataset['id'] + '/filter-options?start=0&pageSize=1000',
-                    {
-                        "x": [
-                            filter_column
-                        ]
-                    }
+                    dataset["sourceURL"]
+                    + "/api/exploration/"
+                    + dataset["id"]
+                    + "/filter-options?start=0&pageSize=1000",
+                    {"x": [filter_column]},
                 )
-                filter_column['values'] = [item['x'][0][0]
-                                           for item in response]
+                filter_column["values"] = [item["x"][0][0] for item in response]
 
     def explore_tool(self, charts: List):
         for chart in charts:
             response = self.post(
-                chart['sourceURL'] + "/api/exploration/" + chart['id'] + '?start=0&pageSize=50', chart)
-            chart['data'] = response
+                chart["sourceURL"]
+                + "/api/exploration/"
+                + chart["id"]
+                + "?start=0&pageSize=50",
+                chart,
+            )
+            chart["data"] = response

@@ -1,7 +1,7 @@
 from langchain_core.prompts import PromptTemplate
 
 simple_datasets_extract_template = PromptTemplate.from_template(
-    '''
+    """
     Instruction: Strict Dataset Filtering
     Task: For the following question, retain only "directly relevant" datasets and remove all indirect or redundant ones.
 
@@ -10,11 +10,11 @@ simple_datasets_extract_template = PromptTemplate.from_template(
         Question: {question}
 
         Candidate Datasets: {datasets}
-  '''
+  """
 )
 
 chart_ploting_template = PromptTemplate.from_template(
-    '''
+    """
     # [Role and Core Objective]
     You are a senior data analyst expert, skilled in data exploration and correlation analysis, and proficient in designing effective data visualizations.
     Your objective is: Based on the user's question, analyze each provided dataset, and for **each dataset deemed relevant**, propose **only one specific chart proposal** that most effectively answers the question.
@@ -113,11 +113,11 @@ chart_ploting_template = PromptTemplate.from_template(
         ]
     }}
 
-  '''
+  """
 )
 
 query_generate_template = PromptTemplate.from_template(
-    '''
+    """
     You are a senior data analyst specializing in statistical data analysis. You excel at extracting insights from data and identifying relationships between different datasets.
 
     You will be given an input JSON structure representing a potential data analysis setup, including pre-defined 'x', 'y', and 'filter' fields. You will also receive a user question.
@@ -149,12 +149,12 @@ query_generate_template = PromptTemplate.from_template(
                     For example, the Taipei Motor Vehicles Office is actually located in New Taipei City. 
     4.  **Strict Compliance:** Adhere strictly to these rules. Do not introduce any modifications or elements not explicitly allowed. Focus solely on adjusting the `operator` and `value` of the pre-existing filter objects based on the user's query.
 
-'''
+"""
 )
 
 # Before prompt
 keyword_extract_template = PromptTemplate.from_template(
-    '''
+    """
     You are a professional information retrieval expert. Please help me find relevant datasets based on the question.
 
     question: {question}
@@ -179,11 +179,11 @@ keyword_extract_template = PromptTemplate.from_template(
 
             Output: ["Air pollution in China", "Health issues in China", "中國的空氣污染", "中國的健康問題"]
 
-  '''
+  """
 )
 
 column_extract_template = PromptTemplate.from_template(
-    '''
+    """
     [Instructions]
         You are an expert skilled in data correlation analysis and business interpretation. 
 
@@ -219,11 +219,11 @@ column_extract_template = PromptTemplate.from_template(
         ]
     }}
 
-  '''
+  """
 )
 
 filter_extract_template = PromptTemplate.from_template(
-    '''
+    """
     Objective:
 
     - Generate multiple chart proposals and select optimal visualization strategies to answer the question using provided datasets.    
@@ -265,11 +265,11 @@ filter_extract_template = PromptTemplate.from_template(
             }}
         ],
     }}
-  '''
+  """
 )
 
 space_info_template = PromptTemplate.from_template(
-    '''
+    """
     Dataset: {datasets}
 
     Please generate a JSON object based on the input dataset information, containing the following fields:
@@ -277,11 +277,11 @@ space_info_template = PromptTemplate.from_template(
     id: Same as the input id.
     region: Determine the region of the dataset.
     language: Determine the language of the dataset.
-  '''
+  """
 )
 
 query_generate_template_2 = PromptTemplate.from_template(
-    '''
+    """
     You are a senior data analyst specializing in statistical data analysis. You excel at extracting insights from data and identifying relationships between different datasets.
 
     User Question: {question}
@@ -317,7 +317,7 @@ query_generate_template_2 = PromptTemplate.from_template(
         - Strictly follow the allowed values.
 
         - Do not modify other parts of the response (e.g., column names, logic outside the specified fields).
-'''
+"""
 )
 
 
@@ -328,7 +328,7 @@ admin_level = {
         "admin_level_7": "直轄市的區",
         "admin_level_8": "縣轄市/鄉鎮",
         "admin_level_9": "村/里",
-        "admin_level_10": "鄰"
+        "admin_level_10": "鄰",
     },
     "Japan": {
         "admin_level_2": "Country",
@@ -338,7 +338,7 @@ admin_level = {
         "admin_level_7": "City / Town / Village",
         "admin_level_8": "Ward (Ku - in designated cities)",
         "admin_level_9": "District / Town block (Chō/Machi/Chōme)",
-        "admin_level_10": "Area (Ōaza/Aza) / Block number (Banchi)"
+        "admin_level_10": "Area (Ōaza/Aza) / Block number (Banchi)",
     },
     "Malaysia": {
         "admin_level_2": "Country",
@@ -346,30 +346,46 @@ admin_level = {
         "admin_level_5": "Division (Bahagian - Sabah & Sarawak only)",
         "admin_level_6": "District (Daerah)",
         "admin_level_7": "Subdistrict (Daerah Kecil / Mukim)",
-        "admin_level_8": "Mukim / Town (Bandar) / Village (Kampung)"
+        "admin_level_8": "Mukim / Town (Bandar) / Village (Kampung)",
     },
     "Singapore": {
         "admin_level_2": "Country",
-        "admin_level_6": "District (CDC - Community Development Council)"
-    }
+        "admin_level_6": "District (CDC - Community Development Council)",
+    },
 }
 
 
 format = {
     "date": [
-        "year", "quarter", "month", "week", "date", "day", "weekday",
-        "year_month", "year_quarter", "year_week", "month_day",
-        "day_hour", "hour", "minute", "second", "hour_minute", "time"
+        "year",
+        "quarter",
+        "month",
+        "week",
+        "date",
+        "day",
+        "weekday",
+        "year_month",
+        "year_quarter",
+        "year_week",
+        "month_day",
+        "day_hour",
+        "hour",
+        "minute",
+        "second",
+        "hour_minute",
+        "time",
     ],
     "space": [
-        "admin_level_2", "admin_level_3", "admin_level_4",
-        "admin_level_5", "admin_level_6", "admin_level_7",
-        "admin_level_8", "admin_level_9", "admin_level_10",
+        "admin_level_2",
+        "admin_level_3",
+        "admin_level_4",
+        "admin_level_5",
+        "admin_level_6",
+        "admin_level_7",
+        "admin_level_8",
+        "admin_level_9",
+        "admin_level_10",
     ],
-    "calculation": [
-        "count", "sum", "avg", "min", "max", "distinct_count"
-    ],
-    "operator": [
-        "eq", "lt", "gt", "lte", "gte", "in", "range"
-    ]
+    "calculation": ["count", "sum", "avg", "min", "max", "distinct_count"],
+    "operator": ["eq", "lt", "gt", "lte", "gte", "in", "range"],
 }

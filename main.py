@@ -1,6 +1,7 @@
 """
 A FastMCP server that provides tools for searching related data to user's query.
 """
+
 from graphs import AssistantGraph
 import os
 from dotenv import load_dotenv
@@ -20,20 +21,20 @@ def get_related_data(query: str) -> str:
 
     Args:
         query (str): The user's query
-    
+
     Returns:
         charts of realted data
     """
     return assistant_graph(
         {
             "question": query,
-            "llm": os.environ['GOOGLE_API_KEY'],
+            "llm": os.environ["GOOGLE_API_KEY"],
             "username": os.environ["ARALIA_USERNAME"],
             "password": os.environ["ARALIA_PASSWORD"],
         }
-    )['response']
+    )["response"]
 
 
 if __name__ == "__main__":
     print("Starting MCP server...")
-    mcp.run(transport='stdio')
+    mcp.run(transport="stdio")
