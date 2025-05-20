@@ -16,7 +16,7 @@ mcp = FastMCP("data-search-server")
 @mcp.tool()
 def get_related_data(query: str) -> str:
     """
-    Get the related data to user's query.
+    Get the related data to user's query from Aralia when there is no data from training data.
 
     Args:
         query (str): The user's query
