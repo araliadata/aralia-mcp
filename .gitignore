@@ -176,3 +176,4 @@ cython_debug/
 # Other files
 csv_img/
 archive/
+.DS_Store
