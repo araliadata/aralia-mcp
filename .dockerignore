@@ -1,0 +1,39 @@
+# Version control
+.git
+.gitignore
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+graphs/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+.env
+.venv
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# Logs and temporary files
+*.log
+output.txt
+
+# Data files
+*.csv
+csv_img/
+
+# System files
+.DS_Store
+Thumbs.db
