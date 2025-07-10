@@ -9,7 +9,7 @@ assistant_graph = AssistantGraph()
 
 question = [
     # "Malaysia Hospital Beds by District",
-    "哪個縣市經呼氣檢測 0.16~0.25 mg/L或血液檢0.031%~0.05%酒駕死亡人數最多?請依照各縣市進行排序。",
+    # "哪個縣市經呼氣檢測 0.16~0.25 mg/L或血液檢0.031%~0.05%酒駕死亡人數最多?請依照各縣市進行排序。",
     # '酒駕致死道路類別以哪種類型居多?',
     # '經呼氣檢測超過 0.80 mg/L或血液檢測超過 0.16%酒駕事故者平均年齡?',
     # '請提供4月份台北區監理所「酒駕新制再犯」課程日期。',
@@ -18,6 +18,7 @@ question = [
     # 'What is the average GDP growth rate of each state in Malaysia in 2019?',
     # 'What is the average GDP growth rate of each state in Malaysia in 2019 compared to their Gini coefficient?',
     # '請提供4月份新北市監理所「酒駕新制再犯」課程日期。',
+    '請分別說明士林站與劍潭站在2025/01/20~2025/01/24日期期間，各自上午8點到中午12點的平均出站人數',
 ]
 
 for item in question:

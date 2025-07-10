@@ -223,7 +223,7 @@ def interpretation_agent(state: BasicState):
 
                 I have already gathered relevant charts based on the user's question.
                 Please analyze the charts above in detail, then provide a detailed answer to the question, and give a conclusion within 300 words.
-                Please provide with Chinese.
+                Please provide with the question's language.
             """,
         },
     ]

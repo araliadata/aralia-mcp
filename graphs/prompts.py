@@ -28,8 +28,11 @@ chart_ploting_template = PromptTemplate.from_template(
     Please strictly write down your thought process for each step.
 
     **Phase 1: Problem Analysis**
-        * Deeply understand the intent of the user's `Question`, break it down, and identify the key entities, metrics, dimensions, and their potential relationships that need to be analyzed.
-        * Thought Record: Document your understanding and analysis of the question.*
+        * Deeply understand the intent of the user's `Question`, break it down, and identify the key entities and metrics.
+        * **Crucially, distinguish between two types of dimensions:**
+            * **1. 主軸維度 (Primary Axis Dimension):** The main dimension that forms the chart's primary axis (e.g., a time series, a continuous numerical range). A chart typically has only one.
+            * **2. 分類比較維度 (Grouping/Comparison Dimension):** Categorical fields used to group or break down the metrics for comparison (e.g., store names, product types, station names). There can be one or more.
+        * Thought Record: Document your understanding and analysis of the question, explicitly listing the identified metrics, primary axis dimensions, and grouping/comparison dimensions.
 
     **Phase 2: Datasets Removal**
         * Retain only the best datasets to the question, remove the worse ones.*
@@ -38,11 +41,12 @@ chart_ploting_template = PromptTemplate.from_template(
         * For best datasets, identify the **minimum necessary set of columns** required to answer the `Question`. 
 
     **Phase 4: Charting Specification(Per Dataset)**
-        a. Identify required data components:
-            - Metrics: Quantitative fields for measurement
-            - Dimensions: Categorical fields for grouping
-        b. If fields's type is **date/datetime/space/nominal/ordinal/point/line/polygon** specify fields to x (if necessary)
-        c. If fields's type is **integer/float** specify fields to y (if necessary)
+        a. Identify required data components based on Phase 1 analysis:
+            - Metrics (指標): Quantitative fields for measurement (usually for the y-axis).
+            - Primary Axis Dimension (主軸維度): The dimension for the x-axis.
+            - Grouping/Comparison Dimension (分類比較維度): The dimension used to break down the data into different series/colors/groups.
+        b. If a field's type is **date/datetime/space/nominal/ordinal/point/line/polygon** specify it for the x-axis (if it's a Primary Axis Dimension or a Grouping/Comparison Dimension).
+        c. If a field's type is **integer/float** specify it for the y-axis (if it's a Metric).
 
     **Phase 5: Filtering Specification(Per Dataset)**
         a. Define filter parameters (including any dual-purpose fields used in both x/y and filtering):
@@ -52,9 +56,11 @@ chart_ploting_template = PromptTemplate.from_template(
         b. Specify required filter fields (including any dual-purpose fields used in both x/y and filtering)
 
     **Phase 6: Format and Calculation Specification(Per Dataset)**
+        Please specify the format for each time filter if necessary.
         a.If field's type is **date, datetime**, 
         - "format" should be one of:
             ["year", "quarter", "month", "week", "date", "day", "weekday", "year_month", "year_quarter", "year_week", "month_day", "day_hour", "hour", "minute", "second", "hour_minute", "time"].
+        - "operator" should be "in"
 
         b.If field's type is **space, point, line, polygon**.
         - Please carefully consider user's question to fill the most general admin_level_x(lowest number) to "format".
@@ -70,11 +76,12 @@ chart_ploting_template = PromptTemplate.from_template(
         - "calculation" should be one of:
             ["count", "distinct_count"]
 
-    **Phase 7:Final Output Generation**
-        a. Apply Phase 4 to x and y.
-        b. Apply Phase 5 to filter.
-        c. Apply to the `json_format` specified below.
-
+    **Phase 7: Final Output Generation**
+        a. The `x` array should include both the **Primary Axis Dimension** and any **Grouping/Comparison Dimensions** identified in Phase 4.
+        b. The `y` array should contain the **Metrics**.
+        c. Apply Phase 5 to the `filter` array. Remember that a Grouping/Comparison Dimension (like "站點") often needs to be in both the `x` array (for grouping) and the `filter` array (to select specific categories).
+        d. Apply to the `json_format` specified below.
+        
     json_format:
     {{
         "charts": [
